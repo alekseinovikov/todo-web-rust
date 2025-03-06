@@ -1,22 +1,83 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TODO App</title>
-    <script src="https://unpkg.com/htmx.org@1.9.4"></script>
-    <link rel="stylesheet" href="/static/style.css">
+    <title>TODO</title>
+    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin-left: 10px;
+            border: none;
+            background: #007bff;
+            color: #fff;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        li {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        li:last-child {
+            border-bottom: none;
+        }
+    </style>
 </head>
 <body>
-<h1>TODO List</h1>
-
-<form hx-post="/add" hx-target="#todo-list" hx-swap="beforeend">
-    <input type="text" name="task" placeholder="Enter a new task" required>
-    <button type="submit">Add</button>
-</form>
-
-<ul id="todo-list">
-    <!-- TODO items will be inserted here dynamically -->
-</ul>
+<div class="container">
+    <h1>TODO</h1>
+    <form hx-post="/todo" hx-target="#todo-list" hx-swap="beforeend">
+        <label>
+            New Task:
+            <input type="text" name="task" placeholder="New task" required>
+        </label>
+        <button type="submit">Add</button>
+    </form>
+    <ul id="todo-list">
+    </ul>
+</div>
 </body>
 </html>
