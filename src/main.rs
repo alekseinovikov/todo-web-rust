@@ -1,12 +1,12 @@
 use actix_web::dev::Service;
 use actix_web::middleware::Logger;
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder};
+use actix_web::{App, HttpResponse, HttpServer, Responder, get, web};
 use config::{Config, ConfigError, Environment, File};
 use futures::try_join;
 use lazy_static::lazy_static;
 use log::info;
 use mime_guess::from_path;
-use prometheus::{register_counter, Counter, Encoder, TextEncoder};
+use prometheus::{Counter, Encoder, TextEncoder, register_counter};
 
 use serde::Deserialize;
 use std::env;
@@ -25,6 +25,8 @@ lazy_static! {
 struct Settings {
     logger: LoggerSettings,
     graceful_shutdown_timeout_seconds: u64,
+    port: String,
+    metrics_port: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -39,6 +41,8 @@ impl Default for Settings {
                 level: "info".to_string(),
             },
             graceful_shutdown_timeout_seconds: 10,
+            port: "8080".to_string(),
+            metrics_port: "9090".to_string(),
         }
     }
 }
@@ -48,10 +52,11 @@ fn load_config() -> Result<Settings, ConfigError> {
         // defaults
         .set_default("logger.level", "info")?
         .set_default("graceful_shutdown_timeout_seconds", 10)?
+        .set_default("port", "8080")?
+        .set_default("metrics_port", "9090")?
         // source file
         .add_source(File::with_name("config").required(false))
-        // override values from ENV with APP_ prefix
-        .add_source(Environment::with_prefix("APP").separator("__"))
+        .add_source(Environment::default().separator("_"))
         .build()?;
     config.try_deserialize()
 }
@@ -126,17 +131,14 @@ async fn main() -> std::io::Result<()> {
             .service(static_files)
     })
     .shutdown_timeout(settings.graceful_shutdown_timeout_seconds)
-    .bind("0.0.0.0:8080")?
+    .bind(format!("0.0.0.0:{}", settings.port))?
     .run();
 
-    let observability_server = HttpServer::new(move || {
-        App::new()
-            .wrap(Logger::default())
-            .service(metrics)
-    })
-    .shutdown_timeout(settings.graceful_shutdown_timeout_seconds)
-    .bind("0.0.0.0:8081")?
-    .run();
+    let observability_server =
+        HttpServer::new(move || App::new().wrap(Logger::default()).service(metrics))
+            .shutdown_timeout(settings.graceful_shutdown_timeout_seconds)
+            .bind(format!("0.0.0.0:{}", settings.metrics_port))?
+            .run();
 
     try_join!(main_server, observability_server)?;
     Ok(())
