@@ -131,7 +131,10 @@ async fn main() -> std::io::Result<()> {
 
     #[cfg(target_os = "linux")]
     {
-        ProcessCollector::new(std::process::id() as i32, "todo-web-rust").register().unwrap();
+        let collector = ProcessCollector::new(std::process::id() as i32, "todo-web-rust");
+        prometheus::default_registry()
+            .register(Box::new(collector))
+            .unwrap();
     }
 
     let observability_server = HttpServer::new(move || {
