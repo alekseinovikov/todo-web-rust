@@ -120,6 +120,8 @@ async fn main() -> std::io::Result<()> {
                 HTTP_COUNTER.inc();
                 srv.call(req)
             })
+            .service(health)
+            .service(readiness)
             .service(index)
             .service(static_files)
     })
@@ -131,8 +133,6 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .wrap(Logger::default())
             .service(metrics)
-            .service(health)
-            .service(readiness)
     })
     .shutdown_timeout(settings.graceful_shutdown_timeout_seconds)
     .bind("0.0.0.0:8081")?
