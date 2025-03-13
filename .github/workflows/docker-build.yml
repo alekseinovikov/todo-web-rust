@@ -4,12 +4,15 @@ permissions:
   packages: write
 
 on:
-  push:
-    branches: [ master ]
+  release:
+    types: [published]
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
@@ -25,7 +28,7 @@ jobs:
         uses: docker/login-action@v2
         with:
           registry: ghcr.io
-          username: ${{ github.actor }}
+          username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push Docker image
@@ -33,4 +36,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository_owner }}/todo-web-rust:${{ github.sha }}
+          tags: ghcr.io/${{ github.repository_owner }}/todo-web-rust:${{ github.event.release.tag_name }}
