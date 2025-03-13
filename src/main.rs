@@ -8,8 +8,6 @@ use log::info;
 use mime_guess::from_path;
 use prometheus::{register_counter, Counter, Encoder, TextEncoder};
 
-#[cfg(target_os = "linux")]
-use prometheus::process_collector::ProcessCollector;
 use serde::Deserialize;
 use std::env;
 mod embed;
@@ -126,16 +124,8 @@ async fn main() -> std::io::Result<()> {
             .service(static_files)
     })
     .shutdown_timeout(settings.graceful_shutdown_timeout_seconds)
-    .bind("127.0.0.1:8080")?
+    .bind("0.0.0.0:8080")?
     .run();
-
-    #[cfg(target_os = "linux")]
-    {
-        let collector = ProcessCollector::new(std::process::id() as i32, "todo-web-rust");
-        prometheus::default_registry()
-            .register(Box::new(collector))
-            .unwrap();
-    }
 
     let observability_server = HttpServer::new(move || {
         App::new()
@@ -145,7 +135,7 @@ async fn main() -> std::io::Result<()> {
             .service(readiness)
     })
     .shutdown_timeout(settings.graceful_shutdown_timeout_seconds)
-    .bind("127.0.0.1:8081")?
+    .bind("0.0.0.0:8081")?
     .run();
 
     try_join!(main_server, observability_server)?;
