@@ -131,7 +131,7 @@ async fn main() -> std::io::Result<()> {
 
     #[cfg(target_os = "linux")]
     {
-        ProcessCollector::new().unwrap().register().unwrap();
+        ProcessCollector::new(std::process::id() as i32, "todo-web-rust").register().unwrap();
     }
 
     let observability_server = HttpServer::new(move || {
